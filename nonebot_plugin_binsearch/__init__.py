@@ -6,7 +6,7 @@ from nonebot.plugin import PluginMetadata
 from pydantic import BaseModel
 from nonebot import get_plugin_config
 
-# 配置类
+
 class Config(BaseModel):
     bin_api_key: str
 
@@ -31,7 +31,7 @@ def query_bin_info(bin_number: str):
     querystring  = {"bin": bin_number}
     try:
         response = requests.post(url, headers=headers, params=querystring)
-        response.raise_for_status()  # 捕获HTTP错误（如401, 404等）
+        response.raise_for_status() 
         return response.json()
     except requests.exceptions.RequestException as e:
         raise Exception(f"API请求失败: {str(e)}")
@@ -47,7 +47,7 @@ async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
         result = query_bin_info(bin_number)
         if result.get('success', False):
             bin_data = result['BIN']
-            # 构建回复消息
+        
             issuer_website = bin_data['issuer']['website'] if bin_data['issuer']['website'] else "暂无"
             reply = (
                 f"🔍 卡BIN信息查询结果：\n"
@@ -67,3 +67,4 @@ async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
             await bot.send(event, "⚠️ 查询失败，请检查BIN号是否正确或稍后重试。")
     except Exception as e:
         await bot.send(event, f"❌ 查询时发生错误：{str(e)}")
+        print(f"查询时发生错误：{str(e)}")
