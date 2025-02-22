@@ -14,6 +14,7 @@ __plugin_meta__ = PluginMetadata(
     usage="/bin 533228",
     type="application",
     config=Config,
+    supported_adapters={"~onebot.v11"},
 )
 
 config = get_plugin_config(Config)
