@@ -79,6 +79,12 @@ _✨ 一个Nonebot2插件用于查询信用卡的卡组织，卡等级，卡类�
 | 配置项 | 必填 | 默认值 | 说明 |
 |:-----:|:----:|:----:|:----:|
 | bin_api_key | 是 | 无 | 你的bin查询api秘钥 |
+> [!NOTE]
+> ### 🔑 如何获取API Key？
+>
+> 前往以下页面申请API Key：
+> [申请页面](https://rapidapi.com/trade-expanding-llc-trade-expanding-llc-default/api/bin-ip-checker/pricing)
+> 每月限制查询 **500 次**，你可以通过多账号申请轮换API Key，以避免超出查询限制。
 
 
 ## 🎉 使用
@@ -86,3 +92,9 @@ _✨ 一个Nonebot2插件用于查询信用卡的卡组织，卡等级，卡类�
 | 指令 | 权限 | 需要@ | 范围 | 说明 |
 |:-----:|:----:|:----:|:----:|:----:|
 | bin 6位bin | 群员 | 是 | 全局 | 查询bin |
+## TODO
+- [ ] **多API Key负载均衡**
+- [ ] **查询速度限制**
+- [ ] **API响应缓存**
+
+
