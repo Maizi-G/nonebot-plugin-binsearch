@@ -12,7 +12,7 @@ keywords = ["nonebot2", "BankCard","binsearch"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-requests = "^2.26"
+httpx = "^0.22"
 pydantic = "^1.8"
 nonebot2 = "^2.2.1"
 nonebot-adapter-onebot = "^2.0.0"
