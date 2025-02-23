@@ -40,6 +40,7 @@ async def query_bin_info(bin_number: str):
 
 bin_query = on_command('bin', aliases={'bin查询'}, priority=5)
 
+
 @bin_query.handle()
 async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
     bin_number = arg.extract_plain_text().strip()
@@ -51,19 +52,27 @@ async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
         result = await query_bin_info(bin_number)
         if result.get('success', False):
             bin_data = result['BIN']
-            issuer_website = bin_data['issuer']['website'] if bin_data['issuer']['website'] else "暂无"
+            issuer_website = bin_data['issuer']['website'] or "暂无"
+            prepaid_icon = "✅" if bin_data.get('is_prepaid') == 'true' else "❌"
+            commercial_icon = "✅" if bin_data.get('is_commercial') == 'true' else "❌"
+            
             reply = (
-                f"🔍 卡BIN信息查询结果：\n"
-                f"├ 卡号段：{bin_data['number']}\n"
-                f"├ 卡组织：{bin_data['scheme']}\n"
-                f"├ 卡类型：{bin_data['type']}\n"
-                f"├ 卡等级：{bin_data['level']}\n"
-                f"├ 商用卡：{'✅ 是' if bin_data.get('is_commercial') == 'true' else '❌ 否'}\n"
-                f"├ 预付卡：{'✅ 是' if bin_data.get('is_prepaid') == 'true' else '❌ 否'}\n"
-                f"├ 发卡国：{bin_data['country']['name']} {bin_data['country']['flag']} ({bin_data['country']['alpha2']})\n"
-                f"├ 发卡行：{bin_data['issuer']['name']}\n"
-                f"├ 银行网站：{issuer_website}\n"
-                f"└ 默认币种：{bin_data['currency']}"
+                f"💳【卡BIN查询结果】{bin_number}\n"
+                f"══════════════════\n"
+                f"▸ 卡号段：{bin_data['number']}\n"
+                f"▸ 卡组织：{bin_data['scheme']}\n"
+                f"▸ 卡片类型：{bin_data['type']} {bin_data['level']}\n"
+                f"▸ 预付卡：{prepaid_icon} ｜ 商用卡：{commercial_icon}\n"
+                f"\n🌍【发行信息】\n"
+                f"══════════════════\n"
+                f"▸ 国家：{bin_data['country']['flag']} {bin_data['country']['name']}\n"
+                f"▸ 代码：{bin_data['country']['alpha2']}\n"
+                f"▸ 货币：{bin_data['currency']}\n"
+                f"\n🏦【发卡机构】\n"
+                f"══════════════════\n"
+                f"▸ 银行名称：{bin_data['issuer']['name']}\n"
+                f"▸ 官方网站：{issuer_website}\n"
+                
             )
             await bot.send(event, Message(reply))
         else:
