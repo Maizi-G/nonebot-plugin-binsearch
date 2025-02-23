@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-binsearch"
-version = "1.2.2"
+version = "1.3.0"
 description = "一个Nonebot2插件用于查询信用卡的卡组织，卡等级，卡类型，发卡国等"
 readme = "README.md"
 authors = ["Maizi <maizicncn@gmail.com>"]
