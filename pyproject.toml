@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-binsearch"
-version = "1.3.0"
+version = "1.3.1"
 description = "一个Nonebot2插件用于查询信用卡的卡组织，卡等级，卡类型，发卡国等"
 readme = "README.md"
 authors = ["Maizi <maizicncn@gmail.com>"]
@@ -12,8 +12,8 @@ keywords = ["nonebot2", "BankCard","binsearch"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-httpx = "^0.22"
-pydantic = "^1.8"
+httpx = ">=0.26.0"
+pydantic = ">=1.10.0,<3.0.0,!=2.5.0,!=2.5.1,!=2.10.0,!=2.10.1"
 nonebot2 = "^2.2.1"
 nonebot-adapter-onebot = "^2.0.0"
 
