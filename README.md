@@ -14,7 +14,7 @@ _✨ 一个Nonebot2插件用于查询信用卡的卡组织，卡等级，卡类�
 
 
 <a href="./LICENSE">
-    <img src="https://img.shields.io/github/license/owner/nonebot-plugin-binsearch.svg" alt="license">
+    <img src="https://img.shields.io/github/license/bankcarddev/nonebot-plugin-binsearch.svg" alt="license">
 </a>
 <a href="https://pypi.python.org/pypi/nonebot-plugin-binsearch">
     <img src="https://img.shields.io/pypi/v/nonebot-plugin-binsearch.svg" alt="pypi">
