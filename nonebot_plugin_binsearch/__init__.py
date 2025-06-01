@@ -12,7 +12,7 @@ from .config import Config
 
 __plugin_meta__ = PluginMetadata(
     name="卡bin查询",
-    description="用于查询信用卡的卡组织，卡等级，卡类型，发卡国等 (图片版)",
+    description="用于查询信用卡的卡组织，卡等级，卡类型，发卡国家或地区等 (图片版)",
     homepage="https://github.com/bankcarddev/nonebot-plugin-binsearch",
     usage="/bin 533228",
     type="application",
@@ -196,7 +196,7 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
         {
             "title": "发行信息",
             "items": [
-                ("国家", f"{country_data.get('name', 'N/A')}"),
+                ("国家或地区", f"{country_data.get('name', 'N/A')}"),
                 ("代码", country_data.get('alpha2', 'N/A')),
                 ("货币", bin_data.get('currency', 'N/A')),
             ]
