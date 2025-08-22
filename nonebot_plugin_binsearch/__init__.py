@@ -350,7 +350,7 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
     return img_byte_arr
 
 
-bin_query = on_command('bin', aliases={'bin查询'}, priority=5, block=True)
+bin_query = on_command('bin', aliases={'BIN','Bin'}, priority=5, block=True)
 
 @bin_query.handle()
 async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
