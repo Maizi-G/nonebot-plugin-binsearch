@@ -1,13 +1,12 @@
+import os
+from io import BytesIO
+
 import httpx
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from nonebot import on_command, get_plugin_config
 from nonebot.adapters.onebot.v11 import Message, Bot, Event, MessageSegment
 from nonebot.params import CommandArg
 from nonebot.plugin import PluginMetadata
-from pydantic import BaseModel
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-from io import BytesIO
-import os
-
 from .config import Config
 
 __plugin_meta__ = PluginMetadata(
@@ -157,8 +156,8 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
     COLOR_TEXT_LIGHT = (120, 120, 130)        # 浅灰文本
     COLOR_FROST_LAYER = (255, 255, 255, 180)  # 毛玻璃效果的半透明白色层 (RGBA)
     COLOR_CARD_BORDER = (255, 255, 255, 120)  # 卡片边框的半透明白色 (RGBA)
-    COLOR_SUCCESS = (25, 135, 84)             # “是”状态的绿色
-    COLOR_INFO = (13, 202, 240)               # “否”状态的青色
+    COLOR_SUCCESS = (255, 0, 0)             # “是”状态的绿色
+    COLOR_INFO = (25, 135, 84)             # “否”状态的青色
 
     # --- 图像与卡片尺寸 ---
     IMG_WIDTH = 800
