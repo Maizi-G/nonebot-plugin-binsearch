@@ -1,5 +1,7 @@
 from nonebot.adapters.onebot.v11 import Bot, Event, Message, MessageSegment
 from nonebot.params import CommandArg
+
+from .refused_bin import refused_bin_list
 from .api import query_bin_info
 from .image import create_bin_image
 
@@ -11,6 +13,10 @@ async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
         return
     if not bin_number.isdigit() or not (6 <= len(bin_number) <= 8):
         await bot.send(event, "🚫 卡BIN通常是6到8位数字，例如：/bin 448590")
+        return
+        # 🚫 黑名单检测
+    if bin_number in refused_bin_list:
+        await bot.send(event, f"❌ 该 BIN（{bin_number}）已被禁止查询。")
         return
 
     try:
