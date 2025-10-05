@@ -12,6 +12,9 @@ from nonebot.exception import FinishedException
 from .api import query_bin_info
 from .image import create_bin_image
 
+# 读取插件配置
+plugin_config = get_plugin_config(Config)
+
 __plugin_meta__ = PluginMetadata(
     name="卡bin查询",
     description="用于查询信用卡的卡组织，卡等级，卡类型，发卡国家或地区等 (图片版)",
@@ -26,6 +29,11 @@ bin_query = on_command('bin', aliases={'BIN','Bin'}, priority=5, block=True)
 
 @bin_query.handle()
 async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
+    # 忽略来自配置中的用户ID
+    user_id = event.get_user_id()
+    ignore_ids = {str(uid) for uid in getattr(plugin_config, 'ignore_user_ids', [])}
+    if user_id in ignore_ids:
+        return
     bin_number = arg.extract_plain_text().strip()
 
     if not bin_number:
