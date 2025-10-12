@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main, master ]
+    paths:
+      - "**.py"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - ".github/workflows/**"
+
+concurrency:
+  group: ci-${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  python-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache Poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install Poetry
+        run: pipx install poetry==1.8.3
+
+      - name: Install deps
+        run: poetry install --no-interaction --no-ansi
+
+      # ---- 代码规范 & 静态检查 ----
+      - name: Ruff (lint)
+        run: poetry run ruff check .
+
+      - name: Black (format check)
+        run: poetry run black --check .
+
+      - name: Mypy (type check)
+        run: poetry run mypy .
+
+      # ---- 安全/密钥扫描（可选但强烈建议）----
+      - name: Gitleaks (secret scan)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --no-git --redact
+
+      # ---- 单元测试（如果有 tests/）----
+      - name: Pytest
+        run: poetry run pytest -q
