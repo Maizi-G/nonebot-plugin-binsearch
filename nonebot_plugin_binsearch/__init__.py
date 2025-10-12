@@ -5,12 +5,16 @@ from .config import Config
 
 from nonebot.adapters.onebot.v11 import Bot, Event, Message, MessageSegment
 from nonebot.params import CommandArg
+from nonebot.log import logger
 
 from .main_bin import result_527375
 from .refused_bin import refused_bin_list
 from nonebot.exception import FinishedException
 from .api import query_bin_info
 from .image import create_bin_image
+
+# 读取插件配置
+plugin_config = get_plugin_config(Config)
 
 __plugin_meta__ = PluginMetadata(
     name="卡bin查询",
@@ -26,6 +30,11 @@ bin_query = on_command('bin', aliases={'BIN','Bin'}, priority=5, block=True)
 
 @bin_query.handle()
 async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
+    # 忽略来自配置中的用户ID
+    user_id = event.get_user_id()
+    ignore_ids = {str(uid) for uid in getattr(plugin_config, 'ignore_user_ids', [])}
+    if user_id in ignore_ids:
+        return
     bin_number = arg.extract_plain_text().strip()
 
     if not bin_number:
@@ -54,6 +63,7 @@ async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
     except FinishedException:
         # 让 finish() 正常工作，不要拦截它
         raise
-    except Exception as e:
+    except Exception as exc:
+        logger.exception("BIN 查询失败: %s", exc)
         # 其他异常才捕获
         await bin_query.finish("⚠️ 查询失败，可能该Bin不存在或网络出现问题。")
