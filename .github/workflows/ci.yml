@@ -27,17 +27,42 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Cache Poetry
+      - name: Install Poetry
+        run: pipx install poetry==1.8.3
+
+      # （可选）让 venv 落在项目目录，便于缓存
+      - name: Configure Poetry venv-in-project
+        run: poetry config virtualenvs.in-project true
+
+      # 缓存 .venv（Poetry 虚拟环境）
+      - name: Cache .venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      # 缓存 Poetry 下载缓存
+      - name: Cache Poetry artifacts
         uses: actions/cache@v4
         with:
           path: ~/.cache/pypoetry
           key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
-      - name: Install Poetry
-        run: pipx install poetry==1.8.3
-
       - name: Install deps
         run: poetry install --no-interaction --no-ansi
+
+      # 关键：把工具装进 Poetry 虚拟环境（不改 pyproject）
+      - name: Install linters & test tools into poetry venv
+        run: |
+          poetry run python -m pip install \
+            ruff==0.6.9 \
+            black==24.8.0 \
+            mypy==1.11.2 \
+            pytest==8.3.2
+          # 可选类型 stub（按需保留/删除）
+          poetry run python -m pip install \
+            types-requests \
+            types-Pillow
 
       # ---- 代码规范 & 静态检查 ----
       - name: Ruff (lint)
@@ -49,12 +74,13 @@ jobs:
       - name: Mypy (type check)
         run: poetry run mypy .
 
-      # ---- 安全/密钥扫描（可选但强烈建议）----
+      # ---- 安全/密钥扫描（可选但建议）----
       - name: Gitleaks (secret scan)
         uses: gitleaks/gitleaks-action@v2
         with:
           args: detect --source . --no-git --redact
 
-      # ---- 单元测试（如果有 tests/）----
+      # ---- 单元测试（若存在 tests/ 再跑）----
       - name: Pytest
+        if: ${{ hashFiles('tests/**') != '' }}
         run: poetry run pytest -q
