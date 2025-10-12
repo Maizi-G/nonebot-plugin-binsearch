@@ -1,14 +1,18 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import cairosvg
+import os
+import random
 from io import BytesIO
-import os, random, cairosvg
+
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
 from .utils import get_font_path, draw_rounded_rectangle_with_border
 
 PLUGIN_DIR = os.path.dirname(__file__)
 ASSETS_DIR = os.path.join(PLUGIN_DIR, "assets")
 
 # 字体
-FONT_REGULAR_PATH = get_font_path("STHUPO.TTF", is_bold=False)
-FONT_BOLD_PATH = get_font_path("STHUPO.TTF", is_bold=True)
+FONT_REGULAR_PATH = get_font_path("STHUPO.TTF")
+FONT_BOLD_PATH = get_font_path("STHUPO.TTF")
 
 # 卡组织 logo 映射
 SCHEME_LOGO_MAP = {
@@ -38,7 +42,7 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
     COLOR_TEXT_LIGHT = (120, 120, 130)
     COLOR_FROST_LAYER = (255, 255, 255, 40)
     COLOR_CARD_BORDER = (255, 255, 255, 40)
-    COLOR_SUCCESS = (255, 0, 0)             # “是”状态的绿色
+    COLOR_SUCCESS = (255, 0, 0)
     COLOR_INFO = (25, 135, 84)
 
     IMG_WIDTH = 800
@@ -237,3 +241,13 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
     final_image.save(img_byte_arr, format='PNG')
     img_byte_arr.seek(0)
     return img_byte_arr
+def create_gradient_background(width, height, color_start, color_end):
+    base = Image.new("RGB", (width, height), color_start)
+    draw = ImageDraw.Draw(base)
+    for y in range(height):
+        factor = y / height
+        r = int(color_start[0] * (1 - factor) + color_end[0] * factor)
+        g = int(color_start[1] * (1 - factor) + color_end[1] * factor)
+        b = int(color_start[2] * (1 - factor) + color_end[2] * factor)
+        draw.line([(0, y), (width, y)], fill=(r, g, b))
+    return base

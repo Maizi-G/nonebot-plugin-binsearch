@@ -5,6 +5,7 @@ from .config import Config
 
 from nonebot.adapters.onebot.v11 import Bot, Event, Message, MessageSegment
 from nonebot.params import CommandArg
+from nonebot.log import logger
 
 from .main_bin import result_527375
 from .refused_bin import refused_bin_list
@@ -62,6 +63,7 @@ async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
     except FinishedException:
         # 让 finish() 正常工作，不要拦截它
         raise
-    except Exception as e:
+    except Exception as exc:
+        logger.exception("BIN 查询失败: %s", exc)
         # 其他异常才捕获
         await bin_query.finish("⚠️ 查询失败，可能该Bin不存在或网络出现问题。")

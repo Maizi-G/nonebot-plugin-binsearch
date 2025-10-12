@@ -1,5 +1,5 @@
 import os
-from PIL import ImageFont, ImageDraw
+from PIL import ImageFont
 
 PLUGIN_DIR = os.path.dirname(__file__)
 FONT_DIR = os.path.join(PLUGIN_DIR, "fonts")
