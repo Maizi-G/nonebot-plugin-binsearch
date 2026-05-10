@@ -24,9 +24,65 @@ SCHEME_LOGO_MAP = {
     "jcb": "jcb",
 }
 
+
+def truncate_text_smart(text, max_width, font, draw):
+    """Smart text truncation that preserves important parts like domains"""
+    try:
+        text_width = draw.textlength(text, font=font)
+    except AttributeError:
+        text_width = draw.textsize(text, font=font)[0]
+
+    if text_width <= max_width:
+        return text
+
+    # For URLs, try to preserve domain
+    if text.startswith('http'):
+        parts = text.split('/')
+        if len(parts) >= 3:
+            domain = '/'.join(parts[:3])
+            try:
+                domain_width = draw.textlength(domain + "...", font=font)
+            except AttributeError:
+                domain_width = draw.textsize(domain + "...", font=font)[0]
+            if domain_width <= max_width:
+                return domain + "..."
+
+    # Standard truncation
+    temp_text = text
+    while len(temp_text) > 3:
+        try:
+            truncated_width = draw.textlength(temp_text[:-3] + "...", font=font)
+        except AttributeError:
+            truncated_width = draw.textsize(temp_text[:-3] + "...", font=font)[0]
+        if truncated_width <= max_width:
+            return temp_text[:-3] + "..."
+        temp_text = temp_text[:-1]
+    return "..."
+
+
+def draw_section_separator(draw, x1, x2, y):
+    """Draw a subtle gradient line separator between sections"""
+    for i in range(3):
+        alpha = 80 - (i * 20)
+        draw.line([(x1 + 10, y + i), (x2 - 10, y + i)],
+                  fill=(200, 200, 210, alpha), width=1)
+
+
+def draw_status_badge(draw, x, y, color):
+    """Draw a small colored badge indicator"""
+    badge_radius = 4
+    badge_x = x - 12
+    badge_y = y + 8
+    draw.ellipse(
+        [(badge_x - badge_radius, badge_y - badge_radius),
+         (badge_x + badge_radius, badge_y + badge_radius)],
+        fill=color
+    )
+
+
 def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
     # 随机图配置
-    bg_name = "bg_" + str(random.randint(1, 2)) + ".png"
+    bg_name = "bg_" + str(random.randint(1, 4)) + ".png"
     bin_data = data.get('BIN', {})
 
     issuer_website = bin_data.get('issuer', {}).get('website') or "暂无"
@@ -36,28 +92,28 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
     issuer_data = bin_data.get('issuer', {})
 
     COLOR_ACCENT_PRIMARY = (0, 122, 255)
-    COLOR_ACCENT_SECONDARY = (108, 117, 125)
-    COLOR_TEXT_DARK = (33, 37, 41)
-    COLOR_TEXT_MEDIUM = (73, 80, 87)
-    COLOR_TEXT_LIGHT = (120, 120, 130)
-    COLOR_FROST_LAYER = (255, 255, 255, 40)
-    COLOR_CARD_BORDER = (255, 255, 255, 40)
-    COLOR_SUCCESS = (255, 0, 0)
-    COLOR_INFO = (25, 135, 84)
+    COLOR_ACCENT_SECONDARY = (88, 97, 115)
+    COLOR_TEXT_DARK = (20, 24, 28)
+    COLOR_TEXT_MEDIUM = (60, 67, 74)
+    COLOR_TEXT_LIGHT = (108, 115, 125)
+    COLOR_FROST_LAYER = (255, 255, 255, 50)
+    COLOR_CARD_BORDER = (255, 255, 255, 60)
+    COLOR_SUCCESS = (25, 135, 84)
+    COLOR_INFO = (13, 110, 253)
 
-    IMG_WIDTH = 800
-    IMG_PADDING_HORIZONTAL = 50
+    IMG_WIDTH = 1000
+    IMG_PADDING_HORIZONTAL = 80
     CARD_MARGIN_X = IMG_PADDING_HORIZONTAL
-    CARD_MARGIN_Y_TOP = 30
-    CARD_CORNER_RADIUS = 20
-    CARD_BLUR_RADIUS = 4
-    CARD_BORDER_WIDTH = 1
+    CARD_MARGIN_Y_TOP = 40
+    CARD_CORNER_RADIUS = 24
+    CARD_BLUR_RADIUS = 3
+    CARD_BORDER_WIDTH = 2
 
     try:
-        font_main_title = ImageFont.truetype(FONT_BOLD_PATH, 36)
-        font_bin_number = ImageFont.truetype(FONT_BOLD_PATH, 30)
-        font_section_header = ImageFont.truetype(FONT_BOLD_PATH, 24)
-        font_label = ImageFont.truetype(FONT_REGULAR_PATH, 20)
+        font_main_title = ImageFont.truetype(FONT_BOLD_PATH, 42)
+        font_bin_number = ImageFont.truetype(FONT_BOLD_PATH, 32)
+        font_section_header = ImageFont.truetype(FONT_BOLD_PATH, 26)
+        font_label = ImageFont.truetype(FONT_REGULAR_PATH, 19)
         font_value = ImageFont.truetype(FONT_REGULAR_PATH, 20)
     except Exception:
         font_main_title, font_bin_number, font_section_header, font_label, font_value = [
@@ -86,19 +142,19 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
         {
             "title": "发卡机构",
             "items": [
-                ("银行名称", issuer_data.get('name', 'N/A')),
+                ("银行或机构名称", issuer_data.get('name', 'N/A')),
                 ("官方网站", issuer_website),
             ],
         }
     ]
 
-    card_padding_top = 30
-    card_padding_horizontal = 30
-    card_padding_bottom = 40
-    title_area_height = 80
-    section_header_height = 40
-    line_item_height = 30
-    space_between_sections = 20
+    card_padding_top = 40
+    card_padding_horizontal = 40
+    card_padding_bottom = 50
+    title_area_height = 100
+    section_header_height = 50
+    line_item_height = 36
+    space_between_sections = 30
 
     calculated_card_content_height = title_area_height
     for idx, section in enumerate(sections):
@@ -116,8 +172,28 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
         background = Image.open(bg_image_path)
         if background.mode != "RGBA":
             background = background.convert("RGBA")
-        if background.size != (IMG_WIDTH, IMG_ACTUAL_HEIGHT):
-            background = background.resize((IMG_WIDTH, IMG_ACTUAL_HEIGHT), Image.Resampling.LANCZOS)
+
+        # 保持原始比例，裁剪或填充到目标尺寸
+        bg_width, bg_height = background.size
+        target_ratio = IMG_WIDTH / IMG_ACTUAL_HEIGHT
+        bg_ratio = bg_width / bg_height
+
+        if bg_ratio > target_ratio:
+            # 背景更宽，按高度缩放后裁剪宽度
+            new_height = IMG_ACTUAL_HEIGHT
+            new_width = int(bg_width * (IMG_ACTUAL_HEIGHT / bg_height))
+            background = background.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            # 居中裁剪
+            left = (new_width - IMG_WIDTH) // 2
+            background = background.crop((left, 0, left + IMG_WIDTH, IMG_ACTUAL_HEIGHT))
+        else:
+            # 背景更高，按宽度缩放后裁剪高度
+            new_width = IMG_WIDTH
+            new_height = int(bg_height * (IMG_WIDTH / bg_width))
+            background = background.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            # 居中裁剪
+            top = (new_height - IMG_ACTUAL_HEIGHT) // 2
+            background = background.crop((0, top, IMG_WIDTH, top + IMG_ACTUAL_HEIGHT))
     except FileNotFoundError:
         background = create_gradient_background(IMG_WIDTH, IMG_ACTUAL_HEIGHT, (40, 60, 80), (20, 30, 40))
         if background.mode != "RGBA":
@@ -129,21 +205,61 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
     card_x1, card_y1 = CARD_MARGIN_X, CARD_MARGIN_Y_TOP
     card_x2, card_y2 = card_x1 + CARD_WIDTH, card_y1 + CARD_ACTUAL_HEIGHT
 
+    # 液态玻璃效果：多层模糊 + 渐变透明度
     card_region_on_bg = final_image.crop((card_x1, card_y1, card_x2, card_y2))
-    blurred_card_bg = card_region_on_bg.filter(ImageFilter.GaussianBlur(CARD_BLUR_RADIUS))
+
+    # 第一层：强模糊
+    blurred_layer1 = card_region_on_bg.filter(ImageFilter.GaussianBlur(CARD_BLUR_RADIUS * 2))
+    # 第二层：中等模糊
+    blurred_layer2 = card_region_on_bg.filter(ImageFilter.GaussianBlur(CARD_BLUR_RADIUS))
+
+    # 混合两层模糊创造液态感
+    blurred_card_bg = Image.blend(blurred_layer1, blurred_layer2, 0.5)
     final_image.paste(blurred_card_bg, (card_x1, card_y1))
 
     overlay_draw_img = Image.new("RGBA", final_image.size, (0, 0, 0, 0))
     overlay_draw = ImageDraw.Draw(overlay_draw_img)
 
+    # 液态玻璃：渐变透明度的多层效果
+    # 第一层：底层半透明白色
     draw_rounded_rectangle_with_border(
         overlay_draw,
         (card_x1, card_y1, card_x2, card_y2),
         radius=CARD_CORNER_RADIUS,
-        fill=COLOR_FROST_LAYER,
-        outline=COLOR_CARD_BORDER if CARD_BORDER_WIDTH > 0 else None,
+        fill=(255, 255, 255, 35),
+        outline=None,
+        width=0,
+    )
+
+    # 第二层：顶部高光渐变
+    gradient_overlay = Image.new("RGBA", final_image.size, (0, 0, 0, 0))
+    gradient_draw = ImageDraw.Draw(gradient_overlay)
+
+    # 创建从上到下的渐变高光
+    card_height = card_y2 - card_y1
+    for i in range(int(card_height * 0.4)):  # 只在顶部40%添加高光
+        alpha = int(30 * (1 - i / (card_height * 0.4)))  # 从30渐变到0
+        gradient_draw.line(
+            [(card_x1, card_y1 + i), (card_x2, card_y1 + i)],
+            fill=(255, 255, 255, alpha),
+            width=1
+        )
+
+    overlay_draw_img = Image.alpha_composite(overlay_draw_img, gradient_overlay)
+
+    # 第三层：边框光晕
+    border_overlay = Image.new("RGBA", final_image.size, (0, 0, 0, 0))
+    border_draw = ImageDraw.Draw(border_overlay)
+    draw_rounded_rectangle_with_border(
+        border_draw,
+        (card_x1, card_y1, card_x2, card_y2),
+        radius=CARD_CORNER_RADIUS,
+        fill=None,
+        outline=(255, 255, 255, 80),
         width=CARD_BORDER_WIDTH,
     )
+
+    overlay_draw_img = Image.alpha_composite(overlay_draw_img, border_overlay)
     final_image = Image.alpha_composite(final_image, overlay_draw_img)
 
     # 插入卡组织 Logo
@@ -154,10 +270,12 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
         logo_path = os.path.join(ASSETS_DIR, f"{logo_basename}.svg")
         if os.path.exists(logo_path):
             try:
-                target_h = 40
+                target_h = 45
                 png_bytes = cairosvg.svg2png(url=logo_path, output_height=target_h)
                 logo_img = Image.open(BytesIO(png_bytes)).convert("RGBA")
-                final_image.paste(logo_img, (card_x1 + 30, card_y1 + 40), logo_img)
+                logo_x = card_x2 - 25 - logo_img.width
+                logo_y = card_y1 + 25
+                final_image.paste(logo_img, (logo_x, logo_y), logo_img)
             except Exception:
                 pass
 
@@ -188,7 +306,19 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
     current_y += (title_area_height - 45)
 
     text_start_x = card_x1 + card_padding_horizontal
-    value_start_x = text_start_x + 160
+
+    # Calculate dynamic label column width based on longest label
+    max_label_width = 0
+    for section in sections:
+        for item in section["items"]:
+            label_text = item[0] + ":"
+            try:
+                label_width = draw.textlength(label_text, font=font_label)
+            except AttributeError:
+                label_width = draw.textsize(label_text, font=font_label)[0]
+            max_label_width = max(max_label_width, label_width)
+
+    value_start_x = text_start_x + max_label_width + 20
 
     for section in sections:
         draw.text(
@@ -210,24 +340,14 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
 
             current_item_font = font_value
             max_value_width = (card_x1 + CARD_WIDTH - card_padding_horizontal) - value_start_x - 5
-            try:
-                value_width = draw.textlength(value, font=current_item_font)
-            except AttributeError:
-                value_width = draw.textsize(value, font=current_item_font)[0]
 
-            if value_width > max_value_width:
-                temp_value = value
-                while len(temp_value) > 0:
-                    try:
-                        temp_width = draw.textlength(temp_value + "...", font=current_item_font)
-                    except AttributeError:
-                        temp_width = draw.textsize(temp_value + "...", font=current_item_font)[0]
-                    if temp_width <= max_value_width:
-                        value = temp_value + "..."
-                        break
-                    temp_value = temp_value[:-1]
-                if not temp_value and value_width > max_value_width:
-                    value = "..."
+            # Use smart truncation
+            value = truncate_text_smart(value, max_value_width, current_item_font, draw)
+
+            # Draw status badge for yes/no fields
+            if label in ["预付卡", "商用卡"]:
+                badge_color = COLOR_SUCCESS if value == "是" else COLOR_TEXT_LIGHT
+                draw_status_badge(draw, value_start_x, current_y, badge_color)
 
             draw.text(
                 (value_start_x, current_y),
@@ -238,9 +358,12 @@ def create_bin_image(bin_number_str: str, data: dict) -> BytesIO:
         current_y += space_between_sections
 
     img_byte_arr = BytesIO()
+
     final_image.save(img_byte_arr, format='PNG')
     img_byte_arr.seek(0)
     return img_byte_arr
+
+
 def create_gradient_background(width, height, color_start, color_end):
     base = Image.new("RGB", (width, height), color_start)
     draw = ImageDraw.Draw(base)

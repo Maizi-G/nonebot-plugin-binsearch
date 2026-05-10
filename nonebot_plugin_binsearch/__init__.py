@@ -1,17 +1,15 @@
 from nonebot import on_command, get_plugin_config
-
-from nonebot.plugin import PluginMetadata
-from .config import Config
-
 from nonebot.adapters.onebot.v11 import Bot, Event, Message, MessageSegment
-from nonebot.params import CommandArg
+from nonebot.exception import FinishedException
 from nonebot.log import logger
+from nonebot.params import CommandArg
+from nonebot.plugin import PluginMetadata
 
+from .api import query_bin_info
+from .config import Config
+from .image import create_bin_image
 from .main_bin import result_527375
 from .refused_bin import refused_bin_list
-from nonebot.exception import FinishedException
-from .api import query_bin_info
-from .image import create_bin_image
 
 # 读取插件配置
 plugin_config = get_plugin_config(Config)
@@ -31,7 +29,8 @@ bin_query = on_command('bin', aliases={'BIN','Bin'}, priority=5, block=True)
 @bin_query.handle()
 async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
     # 忽略来自配置中的用户ID
-    user_id = event.get_user_id()
+    user_id = int(event.get_user_id())
+    group_id = getattr(event, "group_id", None)
     ignore_ids = {str(uid) for uid in getattr(plugin_config, 'ignore_user_ids', [])}
     if user_id in ignore_ids:
         return
@@ -40,13 +39,17 @@ async def handle_bin_query(bot: Bot, event: Event, arg: Message = CommandArg()):
     if not bin_number:
         await bot.send(event, "📌 请输入卡BIN，例如：/bin 448590")
         return
+    if not bin_number.isdigit():
+        await bin_query.finish()
+        return
     if not bin_number.isdigit() or not (6 <= len(bin_number) <= 8):
         await bot.send(event, "🚫 卡BIN通常是6到8位数字，例如：/bin 448590")
         return
         # 🚫 黑名单检测
     if bin_number in refused_bin_list:
-        await bot.send(event, f"❌ 该 BIN（{bin_number}）已被禁止查询。")
-        return
+        # 禁言黑名单bin查询者
+            await bot.send(event, f"乱查唧唧短20cm😋")
+            return
 
     try:
         if bin_number == '527375':
